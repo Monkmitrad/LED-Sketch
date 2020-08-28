@@ -30,8 +30,10 @@ int integerFromPC3 = 0;
 
 uint32_t color = WHITE;
 
+byte lastPeakL = 0;
 byte maxPeakL = 0;
 byte peakCounterL = 0;
+byte lastPeakR = 0;
 byte maxPeakR = 0;
 byte peakCounterR = 0;
 
@@ -155,6 +157,11 @@ void useData() {
       break;
     case 'V':
       if (mode != 'V') {
+        for (uint16_t i = 0; i < strip.numPixels(); i++) {
+          strip.setPixelColor(i, 0);
+          
+        }
+        strip.show();
         mode = 'V';
       }
       vuMeter();
@@ -220,29 +227,57 @@ void vuMeter() {
   }
   //left channel
 
+  //last peak
+  if (integerFromPC1 > lastPeakL) {
+    //louder
+    for (uint16_t i = lastPeakL; i < integerFromPC1; i++) {
+      strip.setPixelColor(i, RED);
+    }
+    strip.show();
+  } else {
+    if (integerFromPC1 < lastPeakL) {
+      //quieter
+      for (uint16_t i = integerFromPC1; i < lastPeakL; i++) {
+        strip.setPixelColor(i, 0);
+      }
+      strip.show();
+    }
+  }
+  lastPeakL = integerFromPC1;
+
   //staying peak
   if (integerFromPC1 >= maxPeakL) {
     maxPeakL = integerFromPC1;
     peakCounterL = 0;
   } else {
     if (peakCounterL > 4) {
+      strip.setPixelColor(maxPeakL, 0);
       maxPeakL--;
     } else {
       peakCounterL++;
     }
   }
-  for (uint16_t i = 0; i < strip.numPixels() / 2; i++) {
-    if (i < integerFromPC1) {
-      strip.setPixelColor(i, RED);
-    } else {
-      strip.setPixelColor(i, 0);
-    }
-    strip.show();
-    //delay(1);
-  }
   strip.setPixelColor(maxPeakL, WHITE);
   strip.show();
   //right channel
+
+  //last peak
+  if (integerFromPC2 > lastPeakR) {
+    //louder
+    for (uint16_t i = strip.numPixels() - lastPeakR; i > strip.numPixels() - integerFromPC2; i--) {
+      strip.setPixelColor(i, GREEN);
+    }
+    strip.show();
+  } else {
+    if (integerFromPC2 < lastPeakR) {
+      //quieter
+      for (uint16_t i = strip.numPixels() - integerFromPC2; i > strip.numPixels() - lastPeakR; i--) {
+        strip.setPixelColor(i, 0);
+      }
+      strip.show();
+    }
+  }
+  lastPeakR = integerFromPC2;
 
   //staying peak
   if (integerFromPC2 >= maxPeakR) {
@@ -250,20 +285,11 @@ void vuMeter() {
     peakCounterR = 0;
   } else {
     if (peakCounterL > 4) {
+      strip.setPixelColor(strip.numPixels() - maxPeakR, 0);
       maxPeakR--;
     } else {
       peakCounterR++;
     }
-  }
-
-  for (uint16_t i = strip.numPixels(); i >= strip.numPixels() / 2; i--) {
-    if (strip.numPixels() - i < integerFromPC2) {
-      strip.setPixelColor(i, GREEN);
-    } else {
-      strip.setPixelColor(i, 0);
-    }
-    strip.show();
-    //delay(1);
   }
   strip.setPixelColor(strip.numPixels() - maxPeakR, WHITE);
   strip.show();
@@ -287,17 +313,16 @@ void runningLight() {
     case 'R':
       for (uint16_t i = 0; i < strip.numPixels(); i++) {
         strip.setPixelColor(i, stripBuffer[i]);
-        strip.show();
-        delay(1);
       }
+      strip.show();
+      delay(50);
       break;
     case 'L':
       for (uint16_t i = strip.numPixels(); i > 0; i--) {
-        strip.setPixelColor(i-1, stripBuffer[strip.numPixels() - 1 - i]);
-        strip.show();
-        delay(1);
+        strip.setPixelColor(i - 1, stripBuffer[strip.numPixels() - 1 - i]);
       }
+      strip.show();
+      delay(50);
       break;
   }
-
 }
