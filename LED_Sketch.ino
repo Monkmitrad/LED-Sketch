@@ -53,8 +53,8 @@ void setup() {
   flushBuffer();
 
   strip.begin();
-  strip.show(); // Initialize all strip to 'off'
-  Serial.begin(9600); // opens serial port, sets data rate to 9600 bps
+  strip.show(); // Initialize the strip to 'off'
+  Serial.begin(9600); // opens serial port, sets baud rate to 9600
 }
 
 void loop() {
@@ -159,7 +159,6 @@ void useData() {
       if (mode != 'V') {
         for (uint16_t i = 0; i < strip.numPixels(); i++) {
           strip.setPixelColor(i, 0);
-          
         }
         strip.show();
         mode = 'V';
@@ -225,22 +224,30 @@ void vuMeter() {
   if (integerFromPC2 > LEDS / 2) {
     integerFromPC2 = LEDS / 2;
   }
+  if (integerFromPC3 > 255 || integerFromPC3 == 0) {
+    integerFromPC3 = 255;
+  }
+
+  uint32_t red = strip.Color(1 * integerFromPC3, 0, 0);
+  uint32_t green = strip.Color(0, 1 * integerFromPC3, 0);
+  uint32_t white = strip.Color(1 * integerFromPC3, 1 * integerFromPC3, 1 * integerFromPC3);
+  
   //left channel
 
   //last peak
   if (integerFromPC1 > lastPeakL) {
     //louder
     for (uint16_t i = lastPeakL; i < integerFromPC1; i++) {
-      strip.setPixelColor(i, RED);
+      strip.setPixelColor(i, red);
     }
-    strip.show();
+    //strip.show();
   } else {
     if (integerFromPC1 < lastPeakL) {
       //quieter
       for (uint16_t i = integerFromPC1; i < lastPeakL; i++) {
         strip.setPixelColor(i, 0);
       }
-      strip.show();
+      //strip.show();
     }
   }
   lastPeakL = integerFromPC1;
@@ -258,23 +265,23 @@ void vuMeter() {
     }
   }
   strip.setPixelColor(maxPeakL, WHITE);
-  strip.show();
+  //strip.show();
   //right channel
 
   //last peak
   if (integerFromPC2 > lastPeakR) {
     //louder
     for (uint16_t i = strip.numPixels() - lastPeakR; i > strip.numPixels() - integerFromPC2; i--) {
-      strip.setPixelColor(i, GREEN);
+      strip.setPixelColor(i, green);
     }
-    strip.show();
+    //strip.show();
   } else {
     if (integerFromPC2 < lastPeakR) {
       //quieter
       for (uint16_t i = strip.numPixels() - integerFromPC2; i > strip.numPixels() - lastPeakR; i--) {
         strip.setPixelColor(i, 0);
       }
-      strip.show();
+      //strip.show();
     }
   }
   lastPeakR = integerFromPC2;
