@@ -41,6 +41,10 @@ int runningCounter = 0;
 int runningCounter2 = 0;
 byte stepTime = 2;
 
+int fadeR = 255;
+int fadeG = 0;
+int fadeB = 0;
+
 char mode = 'C';
 
 CircularBuffer<uint32_t, 50> stripBuffer;
@@ -49,7 +53,6 @@ uint32_t runningPattern[] = {RED, GREEN, BLUE, WHITE, 0, 0};
 boolean newData = false;
 
 void setup() {
-
   flushBuffer();
 
   strip.begin();
@@ -70,6 +73,9 @@ void loop() {
   } else {
     if (mode == 'R' || mode == 'L') {
       runningLight();
+    }
+    if (mode == 'F') {
+      colorFade();
     }
   }
 }
@@ -167,11 +173,9 @@ void useData() {
       break;
     case 'R':
       mode = 'R';
-      if (integerFromPC1 > 10) {
-        integerFromPC1 = 10;
-      }
-      if (integerFromPC1 <= 0) {
-        integerFromPC1 = 1;
+      integerFromPC1 %= 256;
+      if (integerFromPC1 <= 1) {
+        integerFromPC1 = 2;
       }
       stepTime = integerFromPC1;
       runningCounter = 0;
@@ -180,18 +184,27 @@ void useData() {
       runningLight();
       break;
     case 'L':
-      if (integerFromPC1 > 10) {
-        integerFromPC1 = 10;
-      }
-      if (integerFromPC1 <= 0) {
-        integerFromPC1 = 1;
+      mode = 'L';
+      integerFromPC1 %= 256;
+      if (integerFromPC1 <= 1) {
+        integerFromPC1 = 2;
       }
       stepTime = integerFromPC1;
-      mode = 'L';
       runningCounter = 0;
       runningCounter2 = 0;
       flushBuffer();
       runningLight();
+      break;
+    case 'F':
+      mode = 'F';
+      integerFromPC1 %= 256;
+      if (integerFromPC1 <= 1) {
+        integerFromPC1 = 2;
+      }
+      stepTime = integerFromPC1;
+      runningCounter = 0;
+      flushBuffer();
+      colorFade();
       break;
     default:
       mode = 'C';
@@ -200,15 +213,10 @@ void useData() {
 }
 
 void colorWipe() {
-  if (integerFromPC1 > 255) {
-    integerFromPC1 = 255;
-  }
-  if (integerFromPC2 > 255) {
-    integerFromPC2 = 255;
-  }
-  if (integerFromPC3 > 255) {
-    integerFromPC3 = 255;
-  }
+  integerFromPC1 %= 256;
+  integerFromPC2 %= 256;
+  integerFromPC3 %= 256;
+
   color = strip.Color(integerFromPC1, integerFromPC2, integerFromPC3);
   for (uint16_t i = 0; i < strip.numPixels(); i++) {
     strip.setPixelColor(i, color);
@@ -231,7 +239,7 @@ void vuMeter() {
   uint32_t red = strip.Color(1 * integerFromPC3, 0, 0);
   uint32_t green = strip.Color(0, 1 * integerFromPC3, 0);
   uint32_t white = strip.Color(1 * integerFromPC3, 1 * integerFromPC3, 1 * integerFromPC3);
-  
+
   //left channel
 
   //last peak
@@ -266,6 +274,7 @@ void vuMeter() {
   }
   strip.setPixelColor(maxPeakL, WHITE);
   //strip.show();
+
   //right channel
 
   //last peak
@@ -322,14 +331,37 @@ void runningLight() {
         strip.setPixelColor(i, stripBuffer[i]);
       }
       strip.show();
-      delay(50);
+      delay(10);
       break;
     case 'L':
       for (uint16_t i = strip.numPixels(); i > 0; i--) {
         strip.setPixelColor(i - 1, stripBuffer[strip.numPixels() - 1 - i]);
       }
       strip.show();
-      delay(50);
+      delay(10);
       break;
   }
+}
+
+void colorFade() {
+  if (runningCounter % stepTime == 0) {
+    if (fadeR > 0 && fadeB == 0) {
+      fadeR--;
+      fadeG++;
+    }
+    if (fadeG > 0 && fadeR == 0) {
+      fadeG--;
+      fadeB++;
+    }
+    if (fadeB > 0 && fadeG == 0) {
+      fadeB--;
+      fadeR++;
+    }
+    uint32_t fadeColor = strip.Color(fadeR, fadeG, fadeB);
+    for (uint16_t i = 0; i < strip.numPixels(); i++) {
+      strip.setPixelColor(i, fadeColor);
+    }
+    strip.show();
+  }
+  runningCounter++;
 }
