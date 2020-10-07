@@ -24,7 +24,7 @@ char tempChars[numChars];        // temporary array for use when parsing
 
 // variables to hold the parsed data
 char messageFromPC[numChars] = {0};
-int integerFromPC[numChars];
+int integerFromPC[numChars] = {0};
 byte integerIndex = 0;
 
 uint32_t color = WHITE;
@@ -68,7 +68,7 @@ void loop() {
     //  because strtok() used in parseData() replaces the commas with \0
     parseData();
     newData = false;
-    // showParsedData();
+    showParsedData();
     useData();
   } else {
     switch (mode) {
@@ -125,6 +125,8 @@ void recvWithStartEndMarkers() {
 
 void parseData() {
   if (newData == true) {
+    memset(integerFromPC, 0, sizeof(integerFromPC));
+    integerIndex = 0;
     Serial.print("This just in ... ");
     Serial.println(receivedChars);
 
