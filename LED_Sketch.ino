@@ -361,17 +361,15 @@ void colorFade() {
 }
 
 void strobe() {
-  integerFromPC[0] %= 256;  //flashCount
-  integerFromPC[1] %= 256;  //flashDelay
-  integerFromPC[2] %= 10000;  //flashPause
+  integerFromPC[0] %= 256;  //flashDelay
+  integerFromPC[1] %= 10000;  //flashPause
 
-  for (byte i = 0; i < integerFromPC[0]; i++) {
+  for (byte i = 0; i < 1; i++) {
     setAll(255, 255, 255);
-    delay(integerFromPC[1]);
+    delay(integerFromPC[0]);
     setAll(0, 0, 0);
     delay(integerFromPC[1]);
   }
-  delay(integerFromPC[2]);
 }
 
 //general functions
